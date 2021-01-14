@@ -76,6 +76,8 @@ int main(int argc, char* argv[]) {
     // create window and show image
     cout << section("Read Data") << endl;
     while (true) {
+        cam.WaitForStream();
+
         // get left stream
         auto leftStream = cam.GetStreamData(ImageType::IMAGE_LEFT_COLOR);
         if (leftStream.img) {
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]) {
             imshow("Left", img);
         }
         if (leftStream.img_info) {
-            LOG(INFO) << format("frame ID = {}, timestamp = {}, exposure time = {}", leftStream.img_info->frame_id,
+            LOG(INFO) << format("left frame ID = {}, timestamp = {}, exposure time = {}", leftStream.img_info->frame_id,
                                 leftStream.img_info->timestamp, leftStream.img_info->exposure_time);
         }
 
@@ -92,6 +94,23 @@ int main(int argc, char* argv[]) {
         if (rightStream.img) {
             Mat img = rightStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
             imshow("Right", img);
+        }
+        if (rightStream.img_info) {
+            LOG(INFO) << format("right frame ID = {}, timestamp = {}, exposure time = {}",
+                                rightStream.img_info->frame_id, rightStream.img_info->timestamp,
+                                rightStream.img_info->exposure_time);
+        }
+
+        // get depth
+        auto depthStream = cam.GetStreamData(ImageType::IMAGE_DEPTH);
+        if (depthStream.img) {
+            Mat img = depthStream.img->ToMat();
+            imshow("Depth", img);
+        }
+        if (depthStream.img_info) {
+            LOG(INFO) << format("depth frame ID = {}, timestamp = {}, exposure time = {}",
+                                depthStream.img_info->frame_id, depthStream.img_info->timestamp,
+                                depthStream.img_info->exposure_time);
         }
 
         // exit

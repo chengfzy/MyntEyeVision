@@ -1,7 +1,7 @@
 # MYNT EYE Camera Example
 
 ## Install MYNT EYE SDK
-1. My camera is MYNE-EYE-D1000
+1. My camera is MYNE-EYE-D1000-IR-120/Color.
 1. `git clone` from [sdk](https://github.com/slightech/MYNT-EYE-D-SDK), and use cmake to build and install
 1. The document said use `make init & make all`, the `make all` command could be replaced by cmake building.
 1. The `samples` has many useful code and tools.
