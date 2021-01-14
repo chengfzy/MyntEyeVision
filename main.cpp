@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << format("open device, index = {}, name = {}", deviceInfo.index, deviceInfo.name) << endl;
     // set open parameters
     OpenParams openParams(deviceInfo.index);
-    openParams.framerate = 10;
+    openParams.framerate = 30;
     openParams.dev_mode = DeviceMode::DEVICE_ALL;
     openParams.color_mode = ColorMode::COLOR_RAW;
     openParams.stream_mode = StreamMode::STREAM_2560x720;
