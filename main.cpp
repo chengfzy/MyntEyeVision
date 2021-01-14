@@ -20,7 +20,8 @@ string section(const string& text) {
 int main(int argc, char* argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::ParseCommandLineFlags(&argc, &argv, true);
-    FLAGS_logtostderr = true;
+    FLAGS_alsologtostderr = true;
+    FLAGS_colorlogtostderr = true;
 
     // get device information(list)
     cout << section("Device Information") << endl;
@@ -37,13 +38,14 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << format("open device, index = {}, name = {}", deviceInfo.index, deviceInfo.name) << endl;
     // set open parameters
     OpenParams openParams(deviceInfo.index);
-    openParams.framerate = 30;
+    openParams.framerate = 10;
     openParams.dev_mode = DeviceMode::DEVICE_ALL;
     openParams.color_mode = ColorMode::COLOR_RAW;
     openParams.stream_mode = StreamMode::STREAM_2560x720;
     // camera setting
     cam.EnableImageInfo(true);
     cam.EnableProcessMode(ProcessMode::PROC_IMU_ALL);
+    cam.EnableMotionDatas();
     // open
     cam.Open(openParams);
     if (!cam.IsOpened()) {
@@ -111,6 +113,29 @@ int main(int argc, char* argv[]) {
             LOG(INFO) << format("depth frame ID = {}, timestamp = {}, exposure time = {}",
                                 depthStream.img_info->frame_id, depthStream.img_info->timestamp,
                                 depthStream.img_info->exposure_time);
+        }
+
+        // get IMU
+        auto motionData = cam.GetMotionDatas();
+        for (auto& motion : motionData) {
+            if (motion.imu) {
+                if (motion.imu->flag == MYNTEYE_IMU_ACCEL) {
+                    LOG(INFO) << format("IMU, timestamp = {}, temp = {}, acc = [{}, {}, {}]", motion.imu->timestamp,
+                                        motion.imu->temperature, motion.imu->accel[0], motion.imu->accel[1],
+                                        motion.imu->accel[2]);
+                } else if (motion.imu->flag == MYNTEYE_IMU_GYRO) {
+                    LOG(INFO) << format("IMU, timestamp = {}, temp = {}, gyro = [{}, {}, {}]", motion.imu->timestamp,
+                                        motion.imu->temperature, motion.imu->gyro[0], motion.imu->gyro[1],
+                                        motion.imu->gyro[2]);
+                } else if (motion.imu->flag == MYNTEYE_IMU_ACCEL_GYRO_CALIB) {
+                    LOG(INFO) << format("IMU, timestamp = {}, temp = {}, acc = [{}, {}, {}], gyro = [{}, {}, {}]",
+                                        motion.imu->timestamp, motion.imu->temperature, motion.imu->accel[0],
+                                        motion.imu->accel[1], motion.imu->accel[2], motion.imu->gyro[0],
+                                        motion.imu->gyro[1], motion.imu->gyro[2]);
+                } else {
+                    LOG(ERROR) << "unknow IMU type";
+                }
+            }
         }
 
         // exit
