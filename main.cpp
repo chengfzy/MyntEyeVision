@@ -42,10 +42,6 @@ int main(int argc, char* argv[]) {
     openParams.dev_mode = DeviceMode::DEVICE_ALL;
     openParams.color_mode = ColorMode::COLOR_RAW;
     openParams.stream_mode = StreamMode::STREAM_2560x720;
-    // camera setting
-    cam.EnableImageInfo(true);
-    cam.EnableProcessMode(ProcessMode::PROC_IMU_ALL);
-    cam.EnableMotionDatas();
     // open
     cam.Open(openParams);
     if (!cam.IsOpened()) {
@@ -53,6 +49,18 @@ int main(int argc, char* argv[]) {
     } else {
         LOG(INFO) << "open device success";
     }
+    LOG(INFO) << format("data support, image info = {}, motion = {}, distance = {}, location = {}",
+                        cam.IsImageInfoSupported(), cam.IsMotionDatasSupported(), cam.IsDistanceDatasSupported(),
+                        cam.IsLocationDatasSupported());
+    // data enable
+    cam.EnableImageInfo(true);
+    cam.EnableProcessMode(ProcessMode::PROC_IMU_ALL);
+    cam.EnableMotionDatas();
+    cam.EnableDistanceDatas();
+    cam.EnableLocationDatas();
+    LOG(INFO) << format("data enable, image info = {}, motion = {}, distance = {}, location = {}",
+                        cam.IsImageInfoEnabled(), cam.IsMotionDatasEnabled(), cam.IsDistanceDatasEnabled(),
+                        cam.IsLocationDatasSupported());
 
     // get camera intrinsics
     cout << section("Camera Intrinsics") << endl;
@@ -137,6 +145,24 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
+
+        /* // get distance
+        auto distanceData = cam.GetDistanceDatas();
+        for (auto& distance : distanceData) {
+            if (distance.dis) {
+                LOG(INFO) << format("distance, timestamp = {}, distance = {} mm", distance.dis->detection_time,
+                                    distance.dis->distance);
+            }
+        }
+
+        // get GPS
+        auto gpsData = cam.GetLocationDatas();
+        for (auto& v : gpsData) {
+            if (v.gps) {
+                LOG(INFO) << format("GPS, timestamp = {}, long = {}, lat = {}", v.gps->device_time, v.gps->longitude,
+                                    v.gps->latitude);
+            }
+        } */
 
         // exit
         auto key = static_cast<char>(waitKey(1));

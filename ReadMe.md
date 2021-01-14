@@ -7,3 +7,4 @@
 1. The `samples` has many useful code and tools.
 
 ## Build this project
+1. The sample in SDK show the device to obtain *distance* and *location(GPS)*, but the device could not obtain any value.
