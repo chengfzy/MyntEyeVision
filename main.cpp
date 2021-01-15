@@ -91,6 +91,7 @@ int main(int argc, char* argv[]) {
         // get left stream
         auto leftStream = cam.GetStreamData(ImageType::IMAGE_LEFT_COLOR);
         if (leftStream.img) {
+            // auto imgFormat = leftStream.img->format();  // the image format is COLOR_YUYV
             Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
             imshow("Left", img);
         }
@@ -99,9 +100,10 @@ int main(int argc, char* argv[]) {
                                 leftStream.img_info->timestamp, leftStream.img_info->exposure_time);
         }
 
-        // get right stream
+        // get right stream, the image format is COLOR_YUYV
         auto rightStream = cam.GetStreamData(ImageType::IMAGE_RIGHT_COLOR);
         if (rightStream.img) {
+            // auto imgFormat = rightStream.img->format();  // the image format is COLOR_YUYV
             Mat img = rightStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
             imshow("Right", img);
         }
@@ -114,6 +116,7 @@ int main(int argc, char* argv[]) {
         // get depth
         auto depthStream = cam.GetStreamData(ImageType::IMAGE_DEPTH);
         if (depthStream.img) {
+            // auto imgFormat = depthStream.img->format();  // the image format is IMAGE_GRAY_16
             Mat img = depthStream.img->ToMat();
             imshow("Depth", img);
         }
