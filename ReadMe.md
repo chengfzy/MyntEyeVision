@@ -12,3 +12,4 @@
 ## Recorder
 Recorder is used to same the image and IMU to folder.
 1. Maybe lost some frame because save image in single thread.
+1. The timestamp of accelerator and gyroscope are different. IMU的加速度计和陀螺仪时间戳不一致, 测试发现是Acc一个时间, Gyro一个时间.
