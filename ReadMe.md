@@ -8,3 +8,7 @@
 
 ## Build this project
 1. The sample in SDK show the device to obtain *distance* and *location(GPS)*, but the device could not obtain any value.
+
+## Recorder
+Recorder is used to same the image and IMU to folder.
+1. Maybe lost some frame because save image in single thread.
