@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
     if (!util::select(cam, &deviceInfo)) {
         LOG(FATAL) << "cannot get device information";
     }
+    cout << "Print Device Information..." << endl;
     // print out device information
     util::print_stream_infos(cam, deviceInfo.index);
 
@@ -61,6 +62,10 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << format("data enable, image info = {}, motion = {}, distance = {}, location = {}",
                         cam.IsImageInfoEnabled(), cam.IsMotionDatasEnabled(), cam.IsDistanceDatasEnabled(),
                         cam.IsLocationDatasSupported());
+    LOG(INFO) << format("left cam is enable = {}, right cam is enable = {}, depth is enable = {}",
+                        cam.IsStreamDataEnabled(ImageType::IMAGE_LEFT_COLOR),
+                        cam.IsStreamDataEnabled(ImageType::IMAGE_RIGHT_COLOR),
+                        cam.IsStreamDataEnabled(ImageType::IMAGE_DEPTH));
 
     // get camera intrinsics
     cout << section("Camera Intrinsics") << endl;
@@ -68,7 +73,7 @@ int main(int argc, char* argv[]) {
     cout << "left: " << streamIntrinsics.left << endl;
     cout << "right: " << streamIntrinsics.right << endl;
 
-    // get camera intrinsics
+    // get camera extrinsics
     cout << section("Camera Extrinsics") << endl;
     StreamExtrinsics streamExtrinsics = cam.GetStreamExtrinsics(openParams.stream_mode);
     cout << streamExtrinsics << endl;

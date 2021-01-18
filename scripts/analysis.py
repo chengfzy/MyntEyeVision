@@ -15,6 +15,9 @@ def analysis_img_fps(root_folder: str, camera_name: str):
     for f in os.listdir(img_folder):
         if f.endswith('.png') or f.endswith('.jpg'):
             times.append(float(f.split('.')[0].split('_')[-1]) / 100.)  # to ms
+    if len(times) == 0:
+        return
+
     times = np.array(sorted(times))
     delta_time = times[1:] - times[:-1]
     print(f'mean = {delta_time.mean():.5f} ms, min = {delta_time.min():.5f} ms, max = {delta_time.max():.5f} ms',
