@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     create_directories(leftFolder);
     create_directories(rightFolder);
     // create IMU file name
-    path imuPath = rootFolder / path("imu.txt");
+    path imuPath = rootFolder / path("imu.csv");
     std::fstream imuFile(imuPath.string(), ios::out);
     CHECK(imuFile.is_open()) << format("cannot create IMU file \"{}\"", imuPath.string());
     imuFile << "# Timestamp, AccX, AccY, AccZ, GyroX, GyroY, GyroZ" << endl;
