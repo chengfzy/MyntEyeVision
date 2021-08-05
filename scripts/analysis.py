@@ -33,6 +33,8 @@ def analysis_img_fps(root_folder: str, camera_name: str):
 
 
 def analysis_imu_fps(imu_file: str):
+    if not os.path.exists(imu_file):
+        return
     imu = np.loadtxt(imu_file, delimiter=',')
 
     # acc
