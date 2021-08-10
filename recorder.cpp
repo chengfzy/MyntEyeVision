@@ -98,13 +98,14 @@ int main(int argc, char* argv[]) {
             if (showImg || imgNum / 10 == 0) {
                 imshow("Left", img);
             }
+            imgNum++;
         }
 
         // get right stream
         if (cam.IsStreamDataEnabled(ImageType::IMAGE_RIGHT_COLOR)) {
             auto rightStream = cam.GetStreamData(ImageType::IMAGE_RIGHT_COLOR);
             if (rightStream.img && rightStream.img_info) {
-                cout << fmt::format("process left image, index = {}", imgNum) << endl;
+                cout << fmt::format("process right image, index = {}", imgNum) << endl;
                 Mat img = rightStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
                 path fileName = rightFolder / path(fmt::format("{}_{}.jpg", rightStream.img_info->frame_id,
                                                                rightStream.img_info->timestamp));
