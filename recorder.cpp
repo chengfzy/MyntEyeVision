@@ -10,7 +10,6 @@
 #include <opencv2/highgui.hpp>
 
 using namespace std;
-using namespace fmt;
 using namespace boost::filesystem;
 using namespace cv;
 using namespace mynteyed;
@@ -20,7 +19,8 @@ DEFINE_string(folder, "./data", "save folder");
 
 // get the section string
 string section(const string& text) {
-    return format(fg(color::cyan), "{:═^{}}", " " + text + " ", max(100, static_cast<int>(text.size() + 12)));
+    return fmt::format(fmt::fg(fmt::color::cyan), "{:═^{}}", " " + text + " ",
+                       max(100, static_cast<int>(text.size() + 12)));
 }
 
 int main(int argc, char* argv[]) {
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     // create IMU file name
     path imuPath = rootFolder / path("imu.csv");
     std::fstream imuFile(imuPath.string(), ios::out);
-    CHECK(imuFile.is_open()) << format("cannot create IMU file \"{}\"", imuPath.string());
+    CHECK(imuFile.is_open()) << fmt::format("cannot create IMU file \"{}\"", imuPath.string());
     imuFile << "# Timestamp, AccX, AccY, AccZ, GyroX, GyroY, GyroZ" << endl;
 
     // get device information(list)
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
     // open camera
     cout << section("Open Camera") << endl;
-    LOG(INFO) << format("open device, index = {}, name = {}", deviceInfo.index, deviceInfo.name) << endl;
+    LOG(INFO) << fmt::format("open device, index = {}, name = {}", deviceInfo.index, deviceInfo.name) << endl;
     // set open parameters
     OpenParams openParams(deviceInfo.index);
     openParams.framerate = 30;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     cam.EnableImageInfo(true);
     cam.EnableProcessMode(ProcessMode::PROC_IMU_ALL);
     cam.EnableMotionDatas();
-    LOG(INFO) << format("FPS = {} Hz", cam.GetOpenParams().framerate);
+    LOG(INFO) << fmt::format("FPS = {} Hz", cam.GetOpenParams().framerate);
 
     // create window and show image
     cout << section("Read Data") << endl;
@@ -88,9 +88,10 @@ int main(int argc, char* argv[]) {
         // get left stream
         auto leftStream = cam.GetStreamData(ImageType::IMAGE_LEFT_COLOR);
         if (leftStream.img && leftStream.img_info) {
+            cout << fmt::format("process left image, index = {}", imgNum) << endl;
             Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
-            path fileName =
-                leftFolder / path(format("{}_{}.jpg", leftStream.img_info->frame_id, leftStream.img_info->timestamp));
+            path fileName = leftFolder / path(fmt::format("{}_{}.jpg", leftStream.img_info->frame_id,
+                                                          leftStream.img_info->timestamp));
             imwrite(fileName.string(), img);
 
             // show
@@ -102,9 +103,10 @@ int main(int argc, char* argv[]) {
         // get right stream
         auto rightStream = cam.GetStreamData(ImageType::IMAGE_RIGHT_COLOR);
         if (rightStream.img && rightStream.img_info) {
+            cout << fmt::format("process left image, index = {}", imgNum) << endl;
             Mat img = rightStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
-            path fileName = rightFolder /
-                            path(format("{}_{}.jpg", rightStream.img_info->frame_id, rightStream.img_info->timestamp));
+            path fileName = rightFolder / path(fmt::format("{}_{}.jpg", rightStream.img_info->frame_id,
+                                                           rightStream.img_info->timestamp));
 
             imwrite(fileName.string(), img);
             // show
@@ -117,9 +119,9 @@ int main(int argc, char* argv[]) {
         auto motionData = cam.GetMotionDatas();
         for (auto& motion : motionData) {
             if (motion.imu) {
-                imuFile << format("{},{},{}, {},{},{},{}", motion.imu->timestamp, motion.imu->accel[0],
-                                  motion.imu->accel[1], motion.imu->accel[2], motion.imu->gyro[0], motion.imu->gyro[1],
-                                  motion.imu->gyro[2])
+                imuFile << fmt::format("{},{},{}, {},{},{},{}", motion.imu->timestamp, motion.imu->accel[0],
+                                       motion.imu->accel[1], motion.imu->accel[2], motion.imu->gyro[0],
+                                       motion.imu->gyro[1], motion.imu->gyro[2])
                         << endl;
             }
         }

@@ -8,13 +8,13 @@
 #include <opencv2/opencv.hpp>
 
 using namespace std;
-using namespace fmt;
 using namespace cv;
 using namespace mynteyed;
 
 // get the section string
 string section(const string& text) {
-    return format(fg(color::cyan), "{:═^{}}", " " + text + " ", max(100, static_cast<int>(text.size() + 12)));
+    return fmt::format(fmt::fg(fmt::color::cyan), "{:═^{}}", " " + text + " ",
+                       max(100, static_cast<int>(text.size() + 12)));
 }
 
 int main(int argc, char* argv[]) {
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 
     // open camera
     cout << section("Open Camera") << endl;
-    LOG(INFO) << format("open device, index = {}, name = {}", deviceInfo.index, deviceInfo.name) << endl;
+    LOG(INFO) << fmt::format("open device, index = {}, name = {}", deviceInfo.index, deviceInfo.name) << endl;
     // set open parameters
     OpenParams openParams(deviceInfo.index);
     openParams.framerate = 30;
@@ -50,22 +50,22 @@ int main(int argc, char* argv[]) {
     } else {
         LOG(INFO) << "open device success";
     }
-    LOG(INFO) << format("data support, image info = {}, motion = {}, distance = {}, location = {}",
-                        cam.IsImageInfoSupported(), cam.IsMotionDatasSupported(), cam.IsDistanceDatasSupported(),
-                        cam.IsLocationDatasSupported());
+    LOG(INFO) << fmt::format("data support, image info = {}, motion = {}, distance = {}, location = {}",
+                             cam.IsImageInfoSupported(), cam.IsMotionDatasSupported(), cam.IsDistanceDatasSupported(),
+                             cam.IsLocationDatasSupported());
     // data enable
     cam.EnableImageInfo(true);
     cam.EnableProcessMode(ProcessMode::PROC_IMU_ALL);
     cam.EnableMotionDatas();
     cam.EnableDistanceDatas();
     cam.EnableLocationDatas();
-    LOG(INFO) << format("data enable, image info = {}, motion = {}, distance = {}, location = {}",
-                        cam.IsImageInfoEnabled(), cam.IsMotionDatasEnabled(), cam.IsDistanceDatasEnabled(),
-                        cam.IsLocationDatasSupported());
-    LOG(INFO) << format("left cam is enable = {}, right cam is enable = {}, depth is enable = {}",
-                        cam.IsStreamDataEnabled(ImageType::IMAGE_LEFT_COLOR),
-                        cam.IsStreamDataEnabled(ImageType::IMAGE_RIGHT_COLOR),
-                        cam.IsStreamDataEnabled(ImageType::IMAGE_DEPTH));
+    LOG(INFO) << fmt::format("data enable, image info = {}, motion = {}, distance = {}, location = {}",
+                             cam.IsImageInfoEnabled(), cam.IsMotionDatasEnabled(), cam.IsDistanceDatasEnabled(),
+                             cam.IsLocationDatasSupported());
+    LOG(INFO) << fmt::format("left cam is enable = {}, right cam is enable = {}, depth is enable = {}",
+                             cam.IsStreamDataEnabled(ImageType::IMAGE_LEFT_COLOR),
+                             cam.IsStreamDataEnabled(ImageType::IMAGE_RIGHT_COLOR),
+                             cam.IsStreamDataEnabled(ImageType::IMAGE_DEPTH));
 
     // get camera intrinsics
     cout << section("Camera Intrinsics") << endl;
@@ -101,8 +101,9 @@ int main(int argc, char* argv[]) {
             imshow("Left", img);
         }
         if (leftStream.img_info) {
-            LOG(INFO) << format("left frame ID = {}, timestamp = {}, exposure time = {}", leftStream.img_info->frame_id,
-                                leftStream.img_info->timestamp, leftStream.img_info->exposure_time);
+            LOG(INFO) << fmt::format("left frame ID = {}, timestamp = {}, exposure time = {}",
+                                     leftStream.img_info->frame_id, leftStream.img_info->timestamp,
+                                     leftStream.img_info->exposure_time);
         }
 
         // get right stream, the image format is COLOR_YUYV
@@ -113,9 +114,9 @@ int main(int argc, char* argv[]) {
             imshow("Right", img);
         }
         if (rightStream.img_info) {
-            LOG(INFO) << format("right frame ID = {}, timestamp = {}, exposure time = {}",
-                                rightStream.img_info->frame_id, rightStream.img_info->timestamp,
-                                rightStream.img_info->exposure_time);
+            LOG(INFO) << fmt::format("right frame ID = {}, timestamp = {}, exposure time = {}",
+                                     rightStream.img_info->frame_id, rightStream.img_info->timestamp,
+                                     rightStream.img_info->exposure_time);
         }
 
         // get depth
@@ -126,9 +127,9 @@ int main(int argc, char* argv[]) {
             imshow("Depth", img);
         }
         if (depthStream.img_info) {
-            LOG(INFO) << format("depth frame ID = {}, timestamp = {}, exposure time = {}",
-                                depthStream.img_info->frame_id, depthStream.img_info->timestamp,
-                                depthStream.img_info->exposure_time);
+            LOG(INFO) << fmt::format("depth frame ID = {}, timestamp = {}, exposure time = {}",
+                                     depthStream.img_info->frame_id, depthStream.img_info->timestamp,
+                                     depthStream.img_info->exposure_time);
         }
 
         // get IMU
@@ -136,18 +137,18 @@ int main(int argc, char* argv[]) {
         for (auto& motion : motionData) {
             if (motion.imu) {
                 if (motion.imu->flag == MYNTEYE_IMU_ACCEL) {
-                    LOG(INFO) << format("IMU, timestamp = {}, temp = {}, acc = [{}, {}, {}]", motion.imu->timestamp,
-                                        motion.imu->temperature, motion.imu->accel[0], motion.imu->accel[1],
-                                        motion.imu->accel[2]);
+                    LOG(INFO) << fmt::format("IMU, timestamp = {}, temp = {}, acc = [{}, {}, {}]",
+                                             motion.imu->timestamp, motion.imu->temperature, motion.imu->accel[0],
+                                             motion.imu->accel[1], motion.imu->accel[2]);
                 } else if (motion.imu->flag == MYNTEYE_IMU_GYRO) {
-                    LOG(INFO) << format("IMU, timestamp = {}, temp = {}, gyro = [{}, {}, {}]", motion.imu->timestamp,
-                                        motion.imu->temperature, motion.imu->gyro[0], motion.imu->gyro[1],
-                                        motion.imu->gyro[2]);
+                    LOG(INFO) << fmt::format("IMU, timestamp = {}, temp = {}, gyro = [{}, {}, {}]",
+                                             motion.imu->timestamp, motion.imu->temperature, motion.imu->gyro[0],
+                                             motion.imu->gyro[1], motion.imu->gyro[2]);
                 } else if (motion.imu->flag == MYNTEYE_IMU_ACCEL_GYRO_CALIB) {
-                    LOG(INFO) << format("IMU, timestamp = {}, temp = {}, acc = [{}, {}, {}], gyro = [{}, {}, {}]",
-                                        motion.imu->timestamp, motion.imu->temperature, motion.imu->accel[0],
-                                        motion.imu->accel[1], motion.imu->accel[2], motion.imu->gyro[0],
-                                        motion.imu->gyro[1], motion.imu->gyro[2]);
+                    LOG(INFO) << fmt::format("IMU, timestamp = {}, temp = {}, acc = [{}, {}, {}], gyro = [{}, {}, {}]",
+                                             motion.imu->timestamp, motion.imu->temperature, motion.imu->accel[0],
+                                             motion.imu->accel[1], motion.imu->accel[2], motion.imu->gyro[0],
+                                             motion.imu->gyro[1], motion.imu->gyro[2]);
                 } else {
                     LOG(ERROR) << "unknow IMU type";
                 }
