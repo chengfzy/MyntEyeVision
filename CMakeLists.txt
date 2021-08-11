@@ -45,6 +45,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
+# fmt: header only library
+add_definitions(-DFMT_HEADER_ONLY)
+
 # export compile commands
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # projects build setting
@@ -58,6 +61,13 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ###############################################################################
 # Project
 ###############################################################################
+# third party
+set(THIRD_PATH ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty)
+list(APPEND DEPEND_INCLUDES
+    ${THIRD_PATH}
+    ${THIRD_PATH}/cxxopts
+    )
+
 # the main project
 add_executable(${PROJECT_NAME} main.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PRIVATE_DEPEND_INCLUDES})
