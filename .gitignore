@@ -38,4 +38,4 @@ build*/
 cmake-build-*/
 
 # data
-data/
+data*/
