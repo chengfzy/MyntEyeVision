@@ -1,17 +1,19 @@
 #include <fmt/color.h>
 #include <fmt/format.h>
-#include <gflags/gflags.h>
+#include <fmt/ranges.h>
 #include <glog/logging.h>
 #include <mynteyed/camera.h>
 #include <mynteyed/utils.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <cxxopts.hpp>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
 using namespace std;
-using namespace boost::filesystem;
 using namespace cv;
+using namespace boost::filesystem;
 using namespace mynteyed;
 
 DEFINE_bool(show, true, "show image or not");
@@ -24,13 +26,46 @@ string section(const string& text) {
 }
 
 int main(int argc, char* argv[]) {
-    google::InitGoogleLogging(argv[0]);
-    google::ParseCommandLineFlags(&argc, &argv, true);
-    FLAGS_alsologtostderr = true;
-    FLAGS_colorlogtostderr = true;
+    // argument parser
+    cxxopts::Options options(argv[0], "Recorder");
+    // clang-format off
+    options.add_options()("f,folder", "save folder", cxxopts::value<string>()->default_value("./data"))
+        ("frameRate", "frame rate", cxxopts::value<int>()->default_value("30"))
+        ("streamMode", "stream mode", cxxopts::value<string>()->default_value("2560x720"))
+        ("showImage", "show image", cxxopts::value<bool>())
+        ("h,help", "help message");
+    // clang-format on
+    auto result = options.parse(argc, argv);
+    if (result.count("help")) {
+        cout << options.help() << endl;
+        return 0;
+    }
+    string rootFolder = result["folder"].as<string>();
+    int frameRate = result["frameRate"].as<int>();
+    string streamModeName = result["streamMode"].as<string>();
+    bool showImg = result["showImage"].as<bool>();
 
-    bool showImg = FLAGS_show;
-    path rootFolder = absolute(FLAGS_folder);
+    // check stream mode
+    vector<string> streamModeNames = {"2560x720", "1280x720", "1280x480", "640x480"};
+    if (find_if(streamModeNames.begin(), streamModeNames.end(),
+                [&](const string& s) { return boost::iequals(s, streamModeName); }) == streamModeNames.end()) {
+        cout << fmt::format("input detector type should be one item in {}", streamModeNames) << endl << endl;
+        cout << options.help() << endl;
+        return 0;
+    }
+
+    cout << section("Recorder") << endl;
+    cout << fmt::format("save folder: {}", rootFolder) << endl;
+    cout << fmt::format("frame rate = {} Hz", frameRate) << endl;
+    cout << fmt::format("stream mode: {}", streamModeName) << endl;
+    cout << fmt::format("show image: {}", showImg) << endl;
+
+    // init glog
+    google::InitGoogleLogging(argv[0]);
+    // FLAGS_alsologtostderr = true;
+    // FLAGS_colorlogtostderr = true;
+
+    // create directories
     path leftFolder = rootFolder / path("left");
     path rightFolder = rootFolder / path("right");
     // remove old file and create save folder
@@ -64,7 +99,7 @@ int main(int argc, char* argv[]) {
     openParams.framerate = 30;
     openParams.dev_mode = DeviceMode::DEVICE_COLOR;
     openParams.color_mode = ColorMode::COLOR_RAW;
-    openParams.stream_mode = StreamMode::STREAM_2560x720;
+    openParams.stream_mode = StreamMode::STREAM_1280x720;
     // open
     cam.Open(openParams);
     if (!cam.IsOpened()) {
@@ -78,6 +113,8 @@ int main(int argc, char* argv[]) {
     cam.EnableProcessMode(ProcessMode::PROC_IMU_ALL);
     cam.EnableMotionDatas();
     LOG(INFO) << fmt::format("FPS = {} Hz", cam.GetOpenParams().framerate);
+    LOG(INFO) << fmt::format("is left enabled = {}", cam.IsStreamDataEnabled(ImageType::IMAGE_LEFT_COLOR));
+    LOG(INFO) << fmt::format("is right enabled = {}", cam.IsStreamDataEnabled(ImageType::IMAGE_RIGHT_COLOR));
 
     // create window and show image
     cout << section("Read Data") << endl;
@@ -86,23 +123,27 @@ int main(int argc, char* argv[]) {
         cam.WaitForStream();
 
         // get left stream
-        auto leftStream = cam.GetStreamData(ImageType::IMAGE_LEFT_COLOR);
-        if (leftStream.img && leftStream.img_info) {
-            cout << fmt::format("process left image, index = {}", imgNum) << endl;
-            Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
-            path fileName = leftFolder / path(fmt::format("{}_{}.jpg", leftStream.img_info->frame_id,
-                                                          leftStream.img_info->timestamp));
-            imwrite(fileName.string(), img);
+        auto leftStreams = cam.GetStreamDatas(ImageType::IMAGE_LEFT_COLOR);
+        for (auto& leftStream : leftStreams) {
+            if (leftStream.img && leftStream.img_info) {
+                cout << fmt::format("process left image, index = {}, timestamp = {:.5f} s", imgNum,
+                                    leftStream.img_info->timestamp * 1.E-5)
+                     << endl;
+                // Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
+                // path fileName = leftFolder / path(fmt::format("{}.jpg", leftStream.img_info->timestamp * 1E5));
+                // imwrite(fileName.string(), img);
 
-            // show
-            if (showImg || imgNum / 10 == 0) {
-                imshow("Left", img);
+                // show
+                // if (showImg || imgNum / 10 == 0) {
+                //     imshow("Left", img);
+                // }
             }
-            imgNum++;
         }
+        imgNum++;
 
+#if false
         // get right stream
-        if (cam.IsStreamDataEnabled(ImageType::IMAGE_RIGHT_COLOR)) {
+        if (cam.IsStreamDataEnabled(ImageType::IMAGE_RIGHT_COLOR) && false) {
             auto rightStream = cam.GetStreamData(ImageType::IMAGE_RIGHT_COLOR);
             if (rightStream.img && rightStream.img_info) {
                 cout << fmt::format("process right image, index = {}", imgNum) << endl;
@@ -128,18 +169,17 @@ int main(int argc, char* argv[]) {
                         << endl;
             }
         }
-
         // exit
         auto key = static_cast<char>(waitKey(1));
         if (key == 27 || key == 'q' || key == 'Q' || key == 'x' || key == 'X') {
             break;
         }
+#endif
     }
 
     imuFile.close();
     cam.Close();
 
-    google::ShutDownCommandLineFlags();
     google::ShutdownGoogleLogging();
     return 0;
 }

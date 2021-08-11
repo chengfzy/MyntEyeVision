@@ -11,24 +11,22 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 ###############################################################################
 find_package(Gflags REQUIRED)                   # gflags
 find_package(Glog REQUIRED)                     # glog
-find_package(fmt REQUIRED)                      # fmt
 find_package(Boost COMPONENTS filesystem REQUIRED)    # boost
 find_package(OpenCV REQUIRED)                   # OpenCV
 find_package(mynteyed REQUIRED)                 # MyntEye
 # prive dependency include directories and libraries
-list(APPEND PRIVATE_DEPEND_INCLUDES
+list(APPEND DEPEND_INCLUDES
     ${GFLAGS_INCLUDE_DIRS}
     ${GLOG_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     )
-list(APPEND PRIVATE_DEPEND_LIBS
+list(APPEND DEPEND_LIBS
     ${GFLAGS_LIBRARIES}
     ${GLOG_LIBRARIES}
     ${Boost_LIBRARIES}
     ${OpenCV_LIBRARIES}
     mynteye_depth
-    fmt::fmt-header-only 
     )
 
 # when SDK build with OpenCV, add WITH_OPENCV macro to enable some features depending on OpenCV, such as ToMat().
@@ -70,10 +68,10 @@ list(APPEND DEPEND_INCLUDES
 
 # the main project
 add_executable(${PROJECT_NAME} main.cpp)
-target_include_directories(${PROJECT_NAME} PRIVATE ${PRIVATE_DEPEND_INCLUDES})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PRIVATE_DEPEND_LIBS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${DEPEND_INCLUDES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPEND_LIBS})
 
 # data recorder
 add_executable(recorder recorder.cpp)
-target_include_directories(recorder PRIVATE ${PRIVATE_DEPEND_INCLUDES})
-target_link_libraries(recorder PRIVATE ${PRIVATE_DEPEND_LIBS})
+target_include_directories(recorder PRIVATE ${DEPEND_INCLUDES})
+target_link_libraries(recorder PRIVATE ${DEPEND_LIBS})
