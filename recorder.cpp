@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
     options.add_options()("f,folder", "save folder", cxxopts::value<string>()->default_value("./data"))
         ("frameRate", "frame rate", cxxopts::value<int>()->default_value("30"))
         ("streamMode", "stream mode", cxxopts::value<string>()->default_value("2560x720"))
+        ("streamFormat", "stream format", cxxopts::value<string>()->default_value("MJPG"))
         ("showImage", "show image", cxxopts::value<bool>())
         ("h,help", "help message");
     // clang-format on
@@ -40,13 +41,22 @@ int main(int argc, char* argv[]) {
     string rootFolder = result["folder"].as<string>();
     int frameRate = result["frameRate"].as<int>();
     string streamModeName = result["streamMode"].as<string>();
+    string streamFormatName = result["streamFormat"].as<string>();
     bool showImg = result["showImage"].as<bool>();
 
     // check stream mode
     vector<string> streamModeNames = {"2560x720", "1280x720", "1280x480", "640x480"};
     if (find_if(streamModeNames.begin(), streamModeNames.end(),
                 [&](const string& s) { return boost::iequals(s, streamModeName); }) == streamModeNames.end()) {
-        cout << fmt::format("input detector type should be one item in {}", streamModeNames) << endl << endl;
+        cout << fmt::format("input stream mode type should be one item in {}", streamModeNames) << endl << endl;
+        cout << options.help() << endl;
+        return 0;
+    }
+    // check stream format
+    vector<string> streamFormatNames = {"YUYV", "MJPG"};
+    if (find_if(streamFormatNames.begin(), streamFormatNames.end(),
+                [&](const string& s) { return boost::iequals(s, streamFormatName); }) == streamFormatNames.end()) {
+        cout << fmt::format("input stream format should be one item in {}", streamFormatNames) << endl << endl;
         cout << options.help() << endl;
         return 0;
     }
@@ -56,6 +66,7 @@ int main(int argc, char* argv[]) {
     cout << fmt::format("save folder: {}", rootFolder) << endl;
     cout << fmt::format("frame rate = {} Hz", frameRate) << endl;
     cout << fmt::format("stream mode: {}", streamModeName) << endl;
+    cout << fmt::format("stream format: {}", streamFormatName) << endl;
     cout << fmt::format("show image: {}", showImg) << endl;
 
     // init glog
@@ -73,6 +84,13 @@ int main(int argc, char* argv[]) {
         streamMode = StreamMode::STREAM_1280x480;
     } else if (boost::iequals(streamModeName, "640x480")) {
         streamMode = StreamMode::STREAM_640x480;
+    }
+    // get stream format from string
+    StreamFormat streamFormat;
+    if (boost::iequals(streamFormatName, "YUYV")) {
+        streamFormat = StreamFormat::STREAM_YUYV;
+    } else if (boost::iequals(streamFormatName, "MJPG")) {
+        streamFormat = StreamFormat::STREAM_MJPG;
     }
 
     // create directories
@@ -113,6 +131,7 @@ int main(int argc, char* argv[]) {
     openParams.dev_mode = DeviceMode::DEVICE_COLOR;
     openParams.color_mode = ColorMode::COLOR_RAW;
     openParams.stream_mode = streamMode;
+    openParams.color_stream_format = streamFormat;
     // open
     cam.Open(openParams);
     if (!cam.IsOpened()) {
@@ -171,7 +190,6 @@ int main(int argc, char* argv[]) {
             }
             ++rightImageNum;
         }
-#endif
 
         // get IMU
         auto motionData = cam.GetMotionDatas();
@@ -184,6 +202,9 @@ int main(int argc, char* argv[]) {
                         << endl;
             }
         }
+
+#endif
+
         // exit
         // auto key = static_cast<char>(waitKey(1));
         // if (key == 27 || key == 'q' || key == 'Q' || key == 'x' || key == 'X') {
