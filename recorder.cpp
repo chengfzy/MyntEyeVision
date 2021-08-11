@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     options.add_options()("f,folder", "save folder", cxxopts::value<string>()->default_value("./data"))
         ("frameRate", "frame rate", cxxopts::value<int>()->default_value("30"))
-        ("streamMode", "stream mode", cxxopts::value<string>()->default_value("2560x720"))
+        ("streamMode", "stream mode", cxxopts::value<string>()->default_value("1280x720"))
         ("streamFormat", "stream format", cxxopts::value<string>()->default_value("MJPG"))
         ("showImage", "show image", cxxopts::value<bool>())
         ("h,help", "help message");
