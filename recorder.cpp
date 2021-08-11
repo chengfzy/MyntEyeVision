@@ -91,7 +91,8 @@ int main(int argc, char* argv[]) {
     fs::path imuPath = rootPath / "imu.csv";
     std::fstream imuFile(imuPath.string(), ios::out);
     CHECK(imuFile.is_open()) << fmt::format("cannot create IMU file \"{}\"", imuPath.string());
-    imuFile << "# Timestamp, AccX, AccY, AccZ, GyroX, GyroY, GyroZ" << endl;
+    imuFile << "# Timestamp(ns), AccX(m/s^2), AccY(m/s^2), AccZ(m/s^2), GyroX(rad/s), GyroY(rad/s), GyroZ(rad/s)"
+            << endl;
 
     // get device information(list)
     cout << section("Device Information") << endl;
@@ -132,6 +133,8 @@ int main(int argc, char* argv[]) {
     // obtain sensor data and save
     cout << section("Process Sensor Data") << endl;
     size_t leftImageNum{0}, rightImageNum{0};
+    constexpr double kDeg2Rad = M_PI / 180.;
+    constexpr double kG{9.81};
     while (true) {
         cam.WaitForStream();
 
@@ -140,9 +143,9 @@ int main(int argc, char* argv[]) {
         if (leftStream.img && leftStream.img_info) {
             LOG(INFO) << fmt::format("process left image, index = {}, timestamp = {:.5f} s", leftImageNum,
                                      leftStream.img_info->timestamp * 1.E-5);
-            Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
-            fs::path fileName = leftPath / fmt::format("{}.jpg", leftStream.img_info->timestamp * 1E5);
-            imwrite(fileName.string(), img);
+            // Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
+            // fs::path fileName = leftPath / fmt::format("{}.jpg", leftStream.img_info->timestamp * 1.0E4);
+            // imwrite(fileName.string(), img);
 
             // show
             // if (showImg || imgNum / 10 == 0) {
@@ -151,13 +154,14 @@ int main(int argc, char* argv[]) {
         }
         ++leftImageNum;
 
+#if false
         // get right stream
         if (isRightCameraEnable) {
             auto rightStream = cam.GetStreamData(ImageType::IMAGE_RIGHT_COLOR);
             if (rightStream.img && rightStream.img_info) {
                 LOG(INFO) << fmt::format("process right image, index = {}", rightImageNum);
                 Mat img = rightStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
-                fs::path fileName = rightPath / fmt::format("{}.jpg", rightStream.img_info->timestamp * 1E5);
+                fs::path fileName = rightPath / fmt::format("{}.jpg", rightStream.img_info->timestamp * 1.0E4);
                 imwrite(fileName.string(), img);
 
                 // // show
@@ -167,14 +171,16 @@ int main(int argc, char* argv[]) {
             }
             ++rightImageNum;
         }
+#endif
 
         // get IMU
         auto motionData = cam.GetMotionDatas();
         for (auto& motion : motionData) {
             if (motion.imu) {
-                imuFile << fmt::format("{},{},{}, {},{},{},{}", motion.imu->timestamp * 1E5, motion.imu->accel[0],
-                                       motion.imu->accel[1], motion.imu->accel[2], motion.imu->gyro[0],
-                                       motion.imu->gyro[1], motion.imu->gyro[2])
+                imuFile << fmt::format("{},{},{}, {},{},{},{}", motion.imu->timestamp * 1.0E4,
+                                       motion.imu->gyro[0] * kDeg2Rad, motion.imu->gyro[1] * kDeg2Rad,
+                                       motion.imu->gyro[2] * kDeg2Rad, motion.imu->accel[0] * kG,
+                                       motion.imu->accel[1] * kG, motion.imu->accel[2] * kG)
                         << endl;
             }
         }
