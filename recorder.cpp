@@ -13,11 +13,8 @@
 
 using namespace std;
 using namespace cv;
-using namespace boost::filesystem;
 using namespace mynteyed;
-
-DEFINE_bool(show, true, "show image or not");
-DEFINE_string(folder, "./data", "save folder");
+namespace fs = boost::filesystem;
 
 // get the section string
 string section(const string& text) {
@@ -54,6 +51,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    // print input parameters
     cout << section("Recorder") << endl;
     cout << fmt::format("save folder: {}", rootFolder) << endl;
     cout << fmt::format("frame rate = {} Hz", frameRate) << endl;
@@ -62,21 +60,34 @@ int main(int argc, char* argv[]) {
 
     // init glog
     google::InitGoogleLogging(argv[0]);
-    // FLAGS_alsologtostderr = true;
-    // FLAGS_colorlogtostderr = true;
+    FLAGS_alsologtostderr = true;
+    FLAGS_colorlogtostderr = true;
+
+    // get stream mode from string
+    StreamMode streamMode;
+    if (boost::iequals(streamModeName, "2560x720")) {
+        streamMode = StreamMode::STREAM_2560x720;
+    } else if (boost::iequals(streamModeName, "1280x720")) {
+        streamMode = StreamMode::STREAM_1280x720;
+    } else if (boost::iequals(streamModeName, "1280x480")) {
+        streamMode = StreamMode::STREAM_1280x480;
+    } else if (boost::iequals(streamModeName, "640x480")) {
+        streamMode = StreamMode::STREAM_640x480;
+    }
 
     // create directories
-    path leftFolder = rootFolder / path("left");
-    path rightFolder = rootFolder / path("right");
+    fs::path rootPath{rootFolder};
+    fs::path leftPath = rootPath / "left";
+    fs::path rightPath = rootPath / "right";
     // remove old file and create save folder
-    if (is_directory(rootFolder)) {
-        remove_all(rootFolder);
+    if (fs::is_directory(rootPath)) {
+        fs::remove_all(rootPath);
     }
-    create_directories(rootFolder);
-    create_directories(leftFolder);
-    create_directories(rightFolder);
+    fs::create_directories(rootPath);
+    fs::create_directories(leftPath);
+    fs::create_directories(rightPath);
     // create IMU file name
-    path imuPath = rootFolder / path("imu.csv");
+    fs::path imuPath = rootPath / "imu.csv";
     std::fstream imuFile(imuPath.string(), ios::out);
     CHECK(imuFile.is_open()) << fmt::format("cannot create IMU file \"{}\"", imuPath.string());
     imuFile << "# Timestamp, AccX, AccY, AccZ, GyroX, GyroY, GyroZ" << endl;
@@ -96,10 +107,10 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << fmt::format("open device, index = {}, name = {}", deviceInfo.index, deviceInfo.name) << endl;
     // set open parameters
     OpenParams openParams(deviceInfo.index);
-    openParams.framerate = 30;
+    openParams.framerate = frameRate;
     openParams.dev_mode = DeviceMode::DEVICE_COLOR;
     openParams.color_mode = ColorMode::COLOR_RAW;
-    openParams.stream_mode = StreamMode::STREAM_1280x720;
+    openParams.stream_mode = streamMode;
     // open
     cam.Open(openParams);
     if (!cam.IsOpened()) {
@@ -130,7 +141,7 @@ int main(int argc, char* argv[]) {
                                     leftStream.img_info->timestamp * 1.E-5)
                      << endl;
                 // Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
-                // path fileName = leftFolder / path(fmt::format("{}.jpg", leftStream.img_info->timestamp * 1E5));
+                // fs::path fileName = leftFolder / fmt::format("{}.jpg", leftStream.img_info->timestamp * 1E5));
                 // imwrite(fileName.string(), img);
 
                 // show
@@ -148,8 +159,8 @@ int main(int argc, char* argv[]) {
             if (rightStream.img && rightStream.img_info) {
                 cout << fmt::format("process right image, index = {}", imgNum) << endl;
                 Mat img = rightStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
-                path fileName = rightFolder / path(fmt::format("{}_{}.jpg", rightStream.img_info->frame_id,
-                                                               rightStream.img_info->timestamp));
+                fs::path fileName = rightFolder / fmt::format("{}_{}.jpg", rightStream.img_info->frame_id,
+                                                               rightStream.img_info->timestamp);
 
                 imwrite(fileName.string(), img);
                 // show
