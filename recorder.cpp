@@ -160,8 +160,20 @@ int main(int argc, char* argv[]) {
         // get left stream
         auto leftStream = cam.GetStreamData(ImageType::IMAGE_LEFT_COLOR);
         if (leftStream.img && leftStream.img_info) {
-            LOG(INFO) << fmt::format("process left image, index = {}, timestamp = {:.5f} s", leftImageNum,
+            LOG(INFO) << fmt::format("process left image, index = {}, frame ID = {}, timestamp = {:.5f} s",
+                                     leftImageNum, leftStream.img_info->frame_id,
                                      leftStream.img_info->timestamp * 1.E-5);
+
+#if 0
+            {
+                // save YUYV image to .bin file
+                fs::path savePath = leftPath / fmt::format("{}.bin", leftStream.img_info->frame_id);
+                ofstream outFs(savePath.string(), ios::binary);
+                CHECK(outFs.is_open()) << fmt::format("cannot open \"{}\" to save YUYV image", savePath.string());
+                outFs.write(reinterpret_cast<const char*>(leftStream.img->data()), leftStream.img->data_size());
+                outFs.close();
+            }
+#endif
             // Mat img = leftStream.img->To(ImageFormat::COLOR_BGR)->ToMat();
             // fs::path fileName = leftPath / fmt::format("{}.jpg", leftStream.img_info->timestamp * 1.0E4);
             // imwrite(fileName.string(), img);
